@@ -1,1 +1,1 @@
-"# SPT Mod Projects Shared Config" 
+# SPT Mod Projects Shared Config
