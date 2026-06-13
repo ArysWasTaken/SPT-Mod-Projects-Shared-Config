@@ -1,0 +1,15 @@
+<Project>
+  <Import Project="Shared.User.props" />
+  <PropertyGroup>
+    <DistributionDir>$(MSBuildThisFileDirectory)..\Distributions\</DistributionDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SptTarkovManagedDir>$(SptDir)EscapeFromTarkov_Data\Managed\</SptTarkovManagedDir>
+    <SptTarkovPluginsDir>$(SptDir)EscapeFromTarkov_Data\Plugins\x86_64\</SptTarkovPluginsDir>
+    <SptBepInExCoreDir>$(SptDir)BepInEx\core\</SptBepInExCoreDir>
+    <SptBepInExPluginsDir>$(SptDir)BepInEx\plugins\</SptBepInExPluginsDir>
+    <SptBepInExPatchersDir>$(SptDir)BepInEx\patchers\</SptBepInExPatchersDir>
+    <SptServerDir>$(SptDir)SPT\</SptServerDir>
+    <SptServerModsDir>$(SptServerDir)user\mods\</SptServerModsDir>
+  </PropertyGroup>
+</Project>
