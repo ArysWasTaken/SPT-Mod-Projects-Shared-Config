@@ -10,7 +10,8 @@ if (-not $SptDirectory.Exists) {
     exit 1
 }
 
-$sharedUserPropsPath = "$($PSScriptRoot)\Shared.User.props"
+$solutionRootDir = Join-Path ((Get-Item (Join-Path $PSScriptRoot "..")).FullName) "\"
+$sharedUserPropsPath = Join-Path $PSScriptRoot "Shared.User.props"
 
 $xml = New-Object System.Xml.XmlDocument
 $xml.PreserveWhitespace = $true
@@ -33,11 +34,15 @@ function New-SharedUserProps {
     $xmlWriter.WriteStartElement("Project")
 
     $xmlWriter.WriteStartElement("PropertyGroup")
+    $xmlWriter.WriteStartElement("SolutionDir")
+    $xmlWriter.WriteString($solutionRootDir)
+    $xmlWriter.WriteEndElement()
+    $xmlWriter.WriteEndElement()
 
+    $xmlWriter.WriteStartElement("PropertyGroup")
     $xmlWriter.WriteStartElement("SptDir")
     $xmlWriter.WriteString($SptDirectory.FullName)
     $xmlWriter.WriteEndElement()
-
     $xmlWriter.WriteEndElement()
 
     $xmlWriter.WriteEndElement()
@@ -47,32 +52,61 @@ function New-SharedUserProps {
     $xmlWriter.Close()
 }
 
-if (-not (Test-Path -Path $sharedUserPropsPath)) {
-    Write-Host "Shared.User.props not found. Creating the file..." -ForegroundColor Yellow
-    New-SharedUserProps -Path $sharedUserPropsPath
-} else {
-    Write-Host "Shared.User.props found. Loading file..."
-    
-    $xml.Load($sharedUserPropsPath)
+function Update-SharedUserProps {
+    param (
+        [Parameter(Mandatory=$true)]
+        [System.IO.FileInfo]$Path
+    )
 
-    $sptPropertyGroup = $xml.SelectSingleNode("//PropertyGroup[SptDir]")
+    param (
+        [Parameter(Mandatory=$true)]
+        [xml]$Xml
+    )
+
+    $Xml.Load($sharedUserPropsPath)
+
+    $solutionPropertyGroup = $Xml.SelectSingleNode("//PropertyGroup[SolutionDir]")
+
+    if ($null -eq $solutionPropertyGroup) {
+        Write-Host "The Solution <PropertyGroup> is missing. Creating node..." -ForegroundColor Yellow
+        $solutionPropertyGroup = $Xml.CreateElement("PropertyGroup")
+        $Xml.Project.AppendChild($solutionPropertyGroup) > $null
+    }
+
+    $solutionDirNode = $Xml.SelectSingleNode("//PropertyGroup/SolutionDir")
+    
+    if ($null -eq $solutionDirNode) {
+        Write-Host "<SolutionDir> is missing. Creating node..." -ForegroundColor Yellow
+        $solutionDirNode = $Xml.CreateElement("SolutionDir")
+        $solutionPropertyGroup.AppendChild($solutionDirNode) > $null
+    }
+
+    $sptPropertyGroup = $Xml.SelectSingleNode("//PropertyGroup[SptDir]")
 
     if ($null -eq $sptPropertyGroup) {
         Write-Host "The SPT <PropertyGroup> is missing. Creating node..." -ForegroundColor Yellow
-        $sptPropertyGroup = $xml.CreateElement("PropertyGroup")
-        $xml.Project.AppendChild($sptPropertyGroup) > $null
+        $sptPropertyGroup = $Xml.CreateElement("PropertyGroup")
+        $Xml.Project.AppendChild($sptPropertyGroup) > $null
     }
 
     $sptDirNode = $sptPropertyGroup.SelectSingleNode("//SptDir")
 
     if ($null -eq $sptDirNode) {
         Write-Host "<SptDir> is missing. Creating node..." -ForegroundColor Yellow
-        $sptDirNode = $xml.CreateElement("SptDir")
+        $sptDirNode = $Xml.CreateElement("SptDir")
         $sptPropertyGroup.AppendChild($sptDirNode) > $null
     }
 
     $sptDirNode.InnerText = $SptDirectory.FullName
-    $xml.Save($sharedUserPropsPath)
+    $Xml.Save($sharedUserPropsPath)
+}
+
+if (-not (Test-Path -Path $sharedUserPropsPath)) {
+    Write-Host "Shared.User.props not found. Creating the file..." -ForegroundColor Yellow
+    New-SharedUserProps -Path $sharedUserPropsPath
+} else {
+    Write-Host "Shared.User.props found. Loading file..."
+    Update-SharedUserProps -Path $sharedUserPropsPath -Xml $xml
 }
 
 Write-Host "Successfully set up shared mod project configuration!" -ForegroundColor Green
