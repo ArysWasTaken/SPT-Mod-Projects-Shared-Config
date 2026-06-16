@@ -9,7 +9,9 @@ Repository to host shared project/solution configuration for my SPT mods.
 In your main repo, run in your terminal:
 
 ```bash
-git submodule add --name SharedConfig https://github.com/ArysWasTaken/SPT-Mod-Projects-Shared-Config.git
+git submodule add https://github.com/ArysWasTaken/SPT-Mod-Projects-Shared-Config.git SharedConfiguration
+git submodule init
+git submodule update
 ```
 
 ### Cloning a repository that already has this submodule
